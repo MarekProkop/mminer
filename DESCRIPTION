@@ -13,3 +13,5 @@ Imports:
     dplyr,
     httr,
     purrr
+URL: https://github.com/MarekProkop/mminer
+BugReports: https://github.com/MarekProkop/mminer/issues

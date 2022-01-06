@@ -21,13 +21,12 @@
 #' @return A tibble (data frame) with search volume data for the provided
 #'   queries. Rows are ordered the same as the provided queries.
 #' @export
-get_volume_data <- function(
-  query, lang = NULL,
-  api_key = Sys.getenv("MARKETING_MINER_API_KEY"),
-  cache = TRUE, cache_path = "mminer-cache"
-) {
+get_volume_data <- function(query, lang = NULL,
+                            api_key = Sys.getenv("MARKETING_MINER_API_KEY"),
+                            cache = TRUE, cache_path = "mminer-cache") {
   checkmate::assert_character(
-    query, any.missing = FALSE, min.len = 1, unique = TRUE
+    query,
+    any.missing = FALSE, min.len = 1, unique = TRUE
   )
   checkmate::assert_string(lang)
   checkmate::assert_string(api_key)
@@ -86,7 +85,8 @@ get_volume_cache <- function(query = NULL, cache_path = "mminer-cache") {
   checkmate::assert(
     checkmate::check_null(query),
     checkmate::check_character(
-      query, any.missing = FALSE, min.len = 1, unique = TRUE
+      query,
+      any.missing = FALSE, min.len = 1, unique = TRUE
     )
   )
   checkmate::assert_string(cache_path)

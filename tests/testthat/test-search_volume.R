@@ -1,8 +1,11 @@
+save_credits <- TRUE
+
 test_that("get_volume_data() with a single query and no cache works", {
-  skip("Save credits!")
-  query = "seo"
+  skip_if(save_credits, "Save credits!")
+  query <- "seo"
   result <- get_volume_data(
-    query, lang = "cs", cache = FALSE, cache_path = "not-exist"
+    query,
+    lang = "cs", cache = FALSE, cache_path = "not-exist"
   )
   expect_s3_class(result, "tbl_df")
   expect_equal(nrow(result), 1)
@@ -11,10 +14,11 @@ test_that("get_volume_data() with a single query and no cache works", {
 })
 
 test_that("get_volume_data() with multiple queries and no cache works", {
-  skip("Save credits!")
-  query = c("seo", "seo optimalizace", "xxx111yyy222zzz333")
+  skip_if(save_credits, "Save credits!")
+  query <- c("seo", "seo optimalizace", "xxx111yyy222zzz333")
   result <- get_volume_data(
-    query, lang = "cs", cache = FALSE, cache_path = "not-exist"
+    query,
+    lang = "cs", cache = FALSE, cache_path = "not-exist"
   )
   expect_s3_class(result, "tbl_df")
   expect_equal(nrow(result), length(query))
@@ -24,7 +28,7 @@ test_that("get_volume_data() with multiple queries and no cache works", {
 })
 
 test_that("delete_volume_cache() works", {
-  skip("Save credits!")
+  skip_if(save_credits, "Save credits!")
   expect_false(delete_volume_cache(cache_path = tempdir()))
   df <- get_volume_data("seo", lang = "cs", cache_path = tempdir())
   expect_true(delete_volume_cache(cache_path = tempdir()))
@@ -32,8 +36,8 @@ test_that("delete_volume_cache() works", {
 })
 
 test_that("get_volume_data() works with cache properly", {
-  skip("Save credits!")
-  query = "seo"
+  skip_if(save_credits, "Save credits!")
+  query <- "seo"
   delete_volume_cache(cache_path = tempdir())
   df_fetched <- get_volume_data(query, lang = "cs", cache_path = tempdir())
   df_cached <- get_volume_cache(cache_path = tempdir())
@@ -45,7 +49,7 @@ test_that("get_volume_data() works with cache properly", {
   expect_s3_class(df_cached$time_stamp, "POSIXct")
   expect_equal(df_cached[, -ncol(df_cached)], df_fetched)
 
-  query = c("seo", "seo optimalizace", "xxx111yyy222zzz333")
+  query <- c("seo", "seo optimalizace", "xxx111yyy222zzz333")
   df_fetched_2 <- get_volume_data(query, lang = "cs", cache_path = tempdir())
   df_cached_2 <- get_volume_cache(cache_path = tempdir())
   expect_equal(df_cached_2[, -ncol(df_cached_2)], df_fetched_2)

@@ -1,11 +1,11 @@
 Package: mminer
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Marketing Miner Profilers API wrapper in R
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Author: Marek Prokop
+Maintainer: Marek Prokop <mprokop@prokopsw.cz>
+Description: The mminer package is a simple wrapper for Marketing Miner Profilers API. 
+  It fetches search volume data and cache them locally to save credits when necessary.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

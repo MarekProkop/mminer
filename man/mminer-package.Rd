@@ -4,9 +4,9 @@
 \name{mminer-package}
 \alias{mminer}
 \alias{mminer-package}
-\title{mminer: What the Package Does (Title Case)}
+\title{mminer: Marketing Miner Profilers API wrapper in R}
 \description{
-More about what it does (maybe more than one line) Use four spaces when indenting paragraphs within the Description.
+The mminer package is a simple wrapper for Marketing Miner Profilers API. It fetches search volume data and cache them locally to save credits when necessary.
 }
 \seealso{
 Useful links:

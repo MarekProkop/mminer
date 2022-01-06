@@ -12,6 +12,10 @@ LazyData: true
 Imports: 
     dplyr,
     httr,
+    checkmate,
     purrr
 URL: https://github.com/MarekProkop/mminer
 BugReports: https://github.com/MarekProkop/mminer/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

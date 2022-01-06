@@ -13,26 +13,33 @@
 #'   instance "cs".
 #' @param api_key Your Marketing Miner API key. Defaults to the environment
 #'   variable named "MARKETING_MINER_API_KEY".
-#' @param cache A logical value stating whether the resultshould be cached.
+#' @param cache A logical value stating whether the result should be cached.
 #'   Dafaults to "mminer-cache" in working directory.
-#' @param cache_name Path to the directory with the cache.
+#' @param cache_path Path to the directory with the cache. Defaults to the
+#'   'mminer-cache' in the current working directory.
 #'
 #' @return A tibble (data frame) with search volume data for the provided
 #'   queries. Rows are ordered the same as the provided queries.
 #' @export
-search_volume <- function(
+get_volume_data <- function(
   query, lang = NULL,
   api_key = Sys.getenv("MARKETING_MINER_API_KEY"),
-  cache = TRUE, cache_name = "mminer-cache"
+  cache = TRUE, cache_path = "mminer-cache"
 ) {
-  if (length(query) < 1) {
-    stop("Argument query has to be of length 1 or more.")
-  }
+  checkmate::assert_character(
+    query, any.missing = FALSE, min.len = 1, unique = TRUE
+  )
+  checkmate::assert_string(lang)
+  checkmate::assert_string(api_key)
+  checkmate::assert_flag(cache)
+  checkmate::assert(
+    checkmate::check_null(cache_path),
+    checkmate::check_string(cache_path)
+  )
 
-  cached_data <- read_volume(cache_name)
+  cached_data <- get_volume_cache(query, cache_path)
   if (!is.null(cached_data)) {
-    cached_data <- cached_data |>
-      dplyr::filter(keyword %in% query)
+    cached_data <- cached_data[-ncol(cached_data)]
     query_not_cached <- query |>
       purrr::discard(~ .x %in% cached_data$keyword)
   } else {
@@ -52,7 +59,7 @@ search_volume <- function(
     result <- tibble::tibble(keyword = query_not_cached) |>
       dplyr::left_join(result, by = "keyword")
     if (cache) {
-      save_volume(result, cache_name)
+      save_volume(result, cache_path)
     }
     if (!is.null(cached_data)) {
       result <- tibble::tibble(keyword = query) |>
@@ -64,6 +71,109 @@ search_volume <- function(
   }
   result
 }
+
+#' Reads search volume data from cache
+#'
+#' @param query An optional character vector of queries to read from cache.
+#' @param cache_path Path to the directory with the cache. Defaults to the
+#'   'mminer-cache' in the current working directory.
+#'
+#' @return A tibble (data frame) with search volume data from cache. If cache
+#'   file doesn't exist, returns NULL. If the _query_ argument is provided,
+#'   returns the matching queries only.
+#' @export
+get_volume_cache <- function(query = NULL, cache_path = "mminer-cache") {
+  checkmate::assert(
+    checkmate::check_null(query),
+    checkmate::check_character(
+      query, any.missing = FALSE, min.len = 1, unique = TRUE
+    )
+  )
+  checkmate::assert_string(cache_path)
+
+  fname <- file.path(cache_path, "volume.rds")
+  if (file.exists(fname)) {
+    result <- readr::read_rds(fname)
+    if (!is.null(query)) {
+      result <- result |>
+        dplyr::filter(keyword %in% query)
+    }
+  } else {
+    result <- NULL
+  }
+  result
+}
+
+#' Deletes the entire search volume cache file
+#'
+#' @param cache_path Path to the directory with the cache. Defaults to the
+#'   'mminer-cache' in the current working directory.
+#'
+#' @return TRUE if file exists, FALSE if it doesn't.
+#' @export
+delete_volume_cache <- function(cache_path = "mminer-cache") {
+  checkmate::assert_string(cache_path)
+
+  fname <- file.path(cache_path, "volume.rds")
+  result <- file.exists(fname)
+  if (result) {
+    file.remove(fname)
+  }
+  result
+}
+
+#' From a search volume cache removes queires fetched from API before a specific
+#' date and time
+#'
+#' @param cache_path Path to the directory with the cache. Defaults to the
+#'   'mminer-cache' in the current working directory.
+#' @param older_than Date-time. Queries with the older time stamps will be
+#'   removed from cache.
+#'
+#' @return Number of removed queries.
+#' @export
+prune_volume_cache <- function(cache_path = "mminer-cache", older_than = NULL) {
+  checkmate::assert_directory(cache_path, access = "w")
+  fname <- file.path(cache_path, "volume.rds")
+  checkmate::assert_file(fname, access = "w")
+
+  df <- get_volume_cache(cache_path)
+  if (!is.null(df)) {
+    before <- nrow(df)
+    df <- df |>
+      dplyr::filter(time_stamp < older_than)
+    readr::write_rds(df, fname)
+    return(before - nrow(df))
+  } else {
+    return(0)
+  }
+}
+
+#' Calculates costs for a search volume API call
+#'
+#' Checks how many queries are already cached and the count of the rest multiplies by 3 credits.
+#'
+#' @param query Queries to retrieve volume data for as a character vector.
+#' @param cache_path Path to the directory with the cache. Defaults to the
+#'   'mminer-cache' in the current working directory.
+#'
+#' @return
+#' @export
+get_volume_cost <- function(query, cache_path = "mminer-cache") {
+  cached_data <- read_volume(cache_path)
+  if (!is.null(cached_data)) {
+    cached_data <- cached_data |>
+      dplyr::filter(keyword %in% query)
+    query_not_cached <- query |>
+      purrr::discard(~ .x %in% cached_data$keyword)
+  } else {
+    query_not_cached <- query
+  }
+  message(length(query_not_cached), " queries of ", length(query), " must be fetched from API. This will cost ", length(query_not_cached) * 3, " credits.")
+}
+
+# Private -----------------------------------------------------------------
+
 
 search_volume_api_call <- function(query, lang, api_key = Sys.getenv("MARKETING_MINER_API_KEY")) {
   api_url <- "https://profilers-api.marketingminer.com/keywords/search-volume-data"
@@ -83,13 +193,9 @@ search_volume_api_call <- function(query, lang, api_key = Sys.getenv("MARKETING_
   httr::content(response, as = "parsed", type = "application/json")
 }
 
-search_volume_cache <- function(name = "mminer-cache") {
-  read_volume(name)
-}
-
-save_volume <- function(df, name) {
-  fname <- file.path(name, "volume.rds")
-  dir.create(name, showWarnings = FALSE)
+save_volume <- function(df, path) {
+  fname <- file.path(path, "volume.rds")
+  dir.create(path, showWarnings = FALSE)
   time_stamp <- Sys.time()
   df <- df |>
     dplyr::mutate(time_stamp = time_stamp)
@@ -101,13 +207,4 @@ save_volume <- function(df, name) {
       dplyr::ungroup()
   }
   readr::write_rds(df, fname)
-}
-
-read_volume <- function(name) {
-  fname <- file.path(name, "volume.rds")
-  if (file.exists(fname)) {
-    readr::read_rds(fname)
-  } else {
-    NULL
-  }
 }

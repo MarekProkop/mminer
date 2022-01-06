@@ -51,11 +51,11 @@ get_volume_data <- function(
     result <- cont$data |>
       purrr::map_dfr(purrr::flatten) |>
       dplyr::rename(
-        cpc_value = value,
-        cpc_text = text,
-        cpc_currency_code = currency_code
+        cpc_value = .data$value,
+        cpc_text = .data$text,
+        cpc_currency_code = .data$currency_code
       ) |>
-      dplyr::rename_with(~ paste0("monthly_sv_", .x), matches("[0-9]{2}"))
+      dplyr::rename_with(~ paste0("monthly_sv_", .x), dplyr::matches("[0-9]{2}"))
     result <- tibble::tibble(keyword = query_not_cached) |>
       dplyr::left_join(result, by = "keyword")
     if (cache) {
@@ -96,7 +96,7 @@ get_volume_cache <- function(query = NULL, cache_path = "mminer-cache") {
     result <- readr::read_rds(fname)
     if (!is.null(query)) {
       result <- result |>
-        dplyr::filter(keyword %in% query)
+        dplyr::filter(.data$keyword %in% query)
     }
   } else {
     result <- NULL
@@ -141,7 +141,7 @@ prune_volume_cache <- function(cache_path = "mminer-cache", older_than = NULL) {
   if (!is.null(df)) {
     before <- nrow(df)
     df <- df |>
-      dplyr::filter(time_stamp < older_than)
+      dplyr::filter(.data$time_stamp < older_than)
     readr::write_rds(df, fname)
     return(before - nrow(df))
   } else {
@@ -151,19 +151,20 @@ prune_volume_cache <- function(cache_path = "mminer-cache", older_than = NULL) {
 
 #' Calculates costs for a search volume API call
 #'
-#' Checks how many queries are already cached and the count of the rest multiplies by 3 credits.
+#' Prints a message how many queries are already cached and the count of the
+#' rest multiplies by 3 credits.
 #'
 #' @param query Queries to retrieve volume data for as a character vector.
 #' @param cache_path Path to the directory with the cache. Defaults to the
 #'   'mminer-cache' in the current working directory.
 #'
-#' @return
+#' @return None.
 #' @export
 get_volume_cost <- function(query, cache_path = "mminer-cache") {
-  cached_data <- read_volume(cache_path)
+  cached_data <- get_volume_cache(cache_path)
   if (!is.null(cached_data)) {
     cached_data <- cached_data |>
-      dplyr::filter(keyword %in% query)
+      dplyr::filter(.data$keyword %in% query)
     query_not_cached <- query |>
       purrr::discard(~ .x %in% cached_data$keyword)
   } else {
@@ -202,7 +203,7 @@ save_volume <- function(df, path) {
 
   if (file.exists(fname)) {
     df <- dplyr::bind_rows(readr::read_rds(fname), df) |>
-      dplyr::group_by(keyword) |>
+      dplyr::group_by(.data$keyword) |>
       dplyr::slice_tail(n = 1) |>
       dplyr::ungroup()
   }

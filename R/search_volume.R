@@ -161,10 +161,9 @@ prune_volume_cache <- function(cache_path = "mminer-cache", older_than = NULL) {
 #' @return None.
 #' @export
 get_volume_cost <- function(query, cache_path = "mminer-cache") {
-  cached_data <- get_volume_cache(cache_path)
+  cached_data <- get_volume_cache(query, cache_path)
   if (!is.null(cached_data)) {
-    cached_data <- cached_data |>
-      dplyr::filter(.data$keyword %in% query)
+    cached_data <- cached_data[-ncol(cached_data)]
     query_not_cached <- query |>
       purrr::discard(~ .x %in% cached_data$keyword)
   } else {

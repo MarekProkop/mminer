@@ -84,7 +84,7 @@ Now the default cache dosen't exist:
 get_volume_cost("seo")
 ```
 
-But in `temdir()` it does:
+But in `tempdir()` it does:
 
 ```{r}
 get_volume_cost("seo", cache_path = tempdir())

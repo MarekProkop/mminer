@@ -1,5 +1,25 @@
 save_credits <- TRUE
 
+test_that("search_volume_api_call() works", {
+  skip_if(save_credits, "Save credits!")
+  expect_visible(
+    search_volume_api_call(
+      query = c("seo", "seo optimalizace"),
+      lang = "cs"
+    )
+  )
+})
+
+test_that("search_volume_api_call() fails", {
+  skip_if(save_credits, "Save credits!")
+  expect_error(
+    object = search_volume_api_call(
+      query = c("seo", "seo optimalizace"),
+      lang = "xx",
+    )
+  )
+})
+
 test_that("get_volume_data() with a single query and no cache works", {
   skip_if(save_credits, "Save credits!")
   query <- "seo"
@@ -19,6 +39,20 @@ test_that("get_volume_data() with multiple queries and no cache works", {
   result <- get_volume_data(
     query,
     lang = "cs", cache = FALSE, cache_path = "not-exist"
+  )
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), length(query))
+  expect_equal(result$keyword, query)
+  expect_type(result$search_volume, "integer")
+  expect_equal(result$search_volume[length(query)], NA_integer_)
+})
+
+test_that("get_volume_data() with multiple queries, lang = sk and no cache works", {
+  skip_if(save_credits, "Save credits!")
+  query <- c("seo", "seo optimalizácia", "xxx111yyy222zzz333")
+  result <- get_volume_data(
+    query,
+    lang = "sk", cache = FALSE, cache_path = "not-exist"
   )
   expect_s3_class(result, "tbl_df")
   expect_equal(nrow(result), length(query))

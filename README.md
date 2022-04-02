@@ -40,7 +40,7 @@ get_volume_data("seo", lang = "cs")
 #> # A tibble: 1 x 19
 #>   keyword search_volume cpc_value cpc_text cpc_currency_code yoy_change
 #>   <chr>           <int>     <dbl> <chr>    <chr>                  <dbl>
-#> 1 seo              5800      27.6 27.58 Kč CZK                     12.5
+#> 1 seo              5800      28.0 28.01 Kč CZK                     12.5
 #> # ... with 13 more variables: peak_month <chr>, monthly_sv_07 <int>,
 #> #   monthly_sv_08 <int>, monthly_sv_09 <int>, monthly_sv_10 <int>,
 #> #   monthly_sv_11 <int>, monthly_sv_12 <int>, monthly_sv_01 <int>,
@@ -56,9 +56,9 @@ get_volume_data(queries, lang = "cs")
 #> # A tibble: 3 x 19
 #>   keyword          search_volume cpc_value cpc_text cpc_currency_code yoy_change
 #>   <chr>                    <int>     <dbl> <chr>    <chr>                  <dbl>
-#> 1 seo                       5800      27.6 27.58 Kč CZK                    12.5 
-#> 2 seo optimalizace           470      44.5 44.52 Kč CZK                     0.8 
-#> 3 seo company                210      36.9 36.92 Kč CZK                    -7.71
+#> 1 seo                       5800      28.0 28.01 Kč CZK                    12.5 
+#> 2 seo optimalizace           470      45.2 45.21 Kč CZK                     0.8 
+#> 3 seo company                210      37.5 37.49 Kč CZK                    -7.71
 #> # ... with 13 more variables: peak_month <chr>, monthly_sv_07 <int>,
 #> #   monthly_sv_08 <int>, monthly_sv_09 <int>, monthly_sv_10 <int>,
 #> #   monthly_sv_11 <int>, monthly_sv_12 <int>, monthly_sv_01 <int>,
@@ -73,9 +73,9 @@ get_volume_cache()
 #> # A tibble: 3 x 20
 #>   keyword          search_volume cpc_value cpc_text cpc_currency_code yoy_change
 #>   <chr>                    <int>     <dbl> <chr>    <chr>                  <dbl>
-#> 1 seo                       5800      27.6 27.58 Kč CZK                    12.5 
-#> 2 seo company                210      36.9 36.92 Kč CZK                    -7.71
-#> 3 seo optimalizace           470      44.5 44.52 Kč CZK                     0.8 
+#> 1 seo                       5800      28.0 28.01 Kč CZK                    12.5 
+#> 2 seo company                210      37.5 37.49 Kč CZK                    -7.71
+#> 3 seo optimalizace           470      45.2 45.21 Kč CZK                     0.8 
 #> # ... with 14 more variables: peak_month <chr>, monthly_sv_07 <int>,
 #> #   monthly_sv_08 <int>, monthly_sv_09 <int>, monthly_sv_10 <int>,
 #> #   monthly_sv_11 <int>, monthly_sv_12 <int>, monthly_sv_01 <int>,
@@ -111,7 +111,7 @@ get_volume_data("seo", lang = "cs", cache_path = tempdir())
 #> # A tibble: 1 x 19
 #>   keyword search_volume cpc_value cpc_text cpc_currency_code yoy_change
 #>   <chr>           <int>     <dbl> <chr>    <chr>                  <dbl>
-#> 1 seo              5800      27.6 27.58 Kč CZK                     12.5
+#> 1 seo              5800      28.0 28.01 Kč CZK                     12.5
 #> # ... with 13 more variables: peak_month <chr>, monthly_sv_07 <int>,
 #> #   monthly_sv_08 <int>, monthly_sv_09 <int>, monthly_sv_10 <int>,
 #> #   monthly_sv_11 <int>, monthly_sv_12 <int>, monthly_sv_01 <int>,
@@ -126,7 +126,7 @@ get_volume_cost("seo")
 #> 1 queries of 1 must be fetched from API. This will cost 3 credits.
 ```
 
-But in `temdir()` it does:
+But in `tempdir()` it does:
 
 ``` r
 get_volume_cost("seo", cache_path = tempdir())

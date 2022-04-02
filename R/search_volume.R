@@ -24,6 +24,21 @@
 get_volume_data <- function(query, lang = NULL,
                             api_key = Sys.getenv("MARKETING_MINER_API_KEY"),
                             cache = TRUE, cache_path = "mminer-cache") {
+
+  process_api_result <- function(query, lang, api_key) {
+    cont <- search_volume_api_call(query, lang, api_key)
+    result <- cont$data |>
+      purrr::map_dfr(purrr::flatten) |>
+      dplyr::rename(
+        cpc_value = .data$value,
+        cpc_text = .data$text,
+        cpc_currency_code = .data$currency_code
+      ) |>
+      dplyr::rename_with(~ paste0("monthly_sv_", .x), dplyr::matches("[0-9]{2}"))
+    tibble::tibble(keyword = query) |>
+      dplyr::left_join(result, by = "keyword")
+  }
+
   checkmate::assert_character(
     query,
     any.missing = FALSE, min.len = 1, unique = TRUE
@@ -36,6 +51,7 @@ get_volume_data <- function(query, lang = NULL,
     checkmate::check_string(cache_path)
   )
 
+  query <- unique(query)
   cached_data <- get_volume_cache(query, cache_path)
   if (!is.null(cached_data)) {
     cached_data <- cached_data[-ncol(cached_data)]
@@ -46,17 +62,12 @@ get_volume_data <- function(query, lang = NULL,
   }
 
   if (length(query_not_cached) > 0) {
-    cont <- search_volume_api_call(query_not_cached, lang, api_key)
-    result <- cont$data |>
-      purrr::map_dfr(purrr::flatten) |>
-      dplyr::rename(
-        cpc_value = .data$value,
-        cpc_text = .data$text,
-        cpc_currency_code = .data$currency_code
-      ) |>
-      dplyr::rename_with(~ paste0("monthly_sv_", .x), dplyr::matches("[0-9]{2}"))
-    result <- tibble::tibble(keyword = query_not_cached) |>
-      dplyr::left_join(result, by = "keyword")
+    chunks <- split(
+      query_not_cached, ceiling(seq_along(query_not_cached) / 1000)
+    )
+    result <- chunks |>
+      purrr::map_dfr(process_api_result, lang, api_key)
+
     if (cache) {
       save_volume(result, cache_path)
     }
@@ -161,6 +172,7 @@ prune_volume_cache <- function(cache_path = "mminer-cache", older_than = NULL) {
 #' @return None.
 #' @export
 get_volume_cost <- function(query, cache_path = "mminer-cache") {
+  query <- unique(query)
   cached_data <- get_volume_cache(query, cache_path)
   if (!is.null(cached_data)) {
     cached_data <- cached_data[-ncol(cached_data)]
@@ -177,6 +189,7 @@ get_volume_cost <- function(query, cache_path = "mminer-cache") {
 
 search_volume_api_call <- function(query, lang, api_key = Sys.getenv("MARKETING_MINER_API_KEY")) {
   api_url <- "https://profilers-api.marketingminer.com/keywords/search-volume-data"
+
   if (length(query) == 1) {
     response <- httr::GET(
       url = api_url,
@@ -190,7 +203,20 @@ search_volume_api_call <- function(query, lang, api_key = Sys.getenv("MARKETING_
       encode = "json"
     )
   }
-  httr::content(response, as = "parsed", type = "application/json")
+  if (httr::http_type(response) != "application/json") {
+    stop("API did not return json.", call. = FALSE)
+  }
+  parsed <- httr::content(response, as = "parsed", type = "application/json")
+  if (httr::http_error(response)) {
+    stop(
+      sprintf(
+        "Marketing Miner API request failed [%s]\n%s",
+        httr::status_code(response),
+        parsed$message
+      ), call. = FALSE
+    )
+  }
+  parsed
 }
 
 save_volume <- function(df, path) {

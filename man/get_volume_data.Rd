@@ -15,8 +15,8 @@ get_volume_data(
 \arguments{
 \item{query}{Queries to retrieve volume data for as a character vector.}
 
-\item{lang}{A language abbreviation as a character vector of length 1. For
-instance "cs".}
+\item{lang}{A language (actually a country) abbreviation as a character
+vector of length 1. For instance "us", "gb", "cs", "sk" or "pl".}
 
 \item{api_key}{Your Marketing Miner API key. Defaults to the environment
 variable named "MARKETING_MINER_API_KEY".}

@@ -9,8 +9,8 @@
 #' of writing it was 3 credits per keyword.
 #'
 #' @param query Queries to retrieve volume data for as a character vector.
-#' @param lang A language abbreviation as a character vector of length 1. For
-#'   instance "cs".
+#' @param lang A language (actually a country) abbreviation as a character
+#'   vector of length 1. For instance "us", "gb", "cs", "sk" or "pl".
 #' @param api_key Your Marketing Miner API key. Defaults to the environment
 #'   variable named "MARKETING_MINER_API_KEY".
 #' @param cache A logical value stating whether the result should be cached.

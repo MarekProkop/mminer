@@ -1,4 +1,4 @@
-save_credits <- TRUE
+save_credits <- FALSE
 
 test_that("search_volume_api_call() works", {
   skip_if(save_credits, "Save credits!")
@@ -10,14 +10,35 @@ test_that("search_volume_api_call() works", {
   )
 })
 
-test_that("search_volume_api_call() fails", {
+test_that("search_volume_api_call() fails with wrong language", {
   skip_if(save_credits, "Save credits!")
   expect_error(
     object = search_volume_api_call(
       query = c("seo", "seo optimalizace"),
-      lang = "xx",
+      lang = "xx"
     )
   )
+})
+
+test_that("search_volume_api_call() fails with a query longer than 100 chars", {
+  skip_if(save_credits, "Save credits!")
+  long_query <- "123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 1"
+  expect_error(
+    object = search_volume_api_call(
+      query = c("seo", long_query),
+      lang = "cs"
+    )
+  )
+})
+
+test_that("search_volume_api_call() works with a query 80 characters long", {
+  skip_if(save_credits, "Save credits!")
+  long_query <- "123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 "
+  result <- search_volume_api_call(
+    query = c("seo", long_query),
+    lang = "cs"
+  )
+  expect_visible(result)
 })
 
 test_that("get_volume_data() with a single query and no cache works", {
@@ -45,6 +66,21 @@ test_that("get_volume_data() with multiple queries and no cache works", {
   expect_equal(result$keyword, query)
   expect_type(result$search_volume, "integer")
   expect_equal(result$search_volume[length(query)], NA_integer_)
+})
+
+test_that("get_volume_data() with a long query and no cache works", {
+  skip_if(save_credits, "Save credits!")
+  long_query <- "123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 1"
+  query <- c("seo", long_query, "seo optimalizace")
+  result <- get_volume_data(
+    query,
+    lang = "cs", cache = FALSE, cache_path = "not-exist"
+  )
+  expect_s3_class(result, "tbl_df")
+  expect_equal(nrow(result), length(query))
+  expect_equal(result$keyword, query)
+  expect_type(result$search_volume, "integer")
+  expect_equal(result$search_volume[2], NA_integer_)
 })
 
 test_that("get_volume_data() with multiple queries, lang = sk and no cache works", {

@@ -19,14 +19,16 @@
 #'   'mminer-cache' in the current working directory.
 #'
 #' @return A tibble (data frame) with search volume data for the provided
-#'   queries. Rows are ordered the same as the provided queries.
+#'   queries. Rows are ordered the same as the provided queries. If any query is
+#'   longer than 80 characters, its search volume will be NA bacause of
+#'   limitation of the API.
 #' @export
 get_volume_data <- function(query, lang = NULL,
                             api_key = Sys.getenv("MARKETING_MINER_API_KEY"),
                             cache = TRUE, cache_path = "mminer-cache") {
 
   process_api_result <- function(query, lang, api_key) {
-    cont <- search_volume_api_call(query, lang, api_key)
+    cont <- search_volume_api_call(query[nchar(query) <= 80], lang, api_key)
     result <- cont$data |>
       purrr::map_dfr(purrr::flatten) |>
       dplyr::rename(
